@@ -4,9 +4,9 @@
 # TERRAFORM SETTINGS
 # ---------------------------------------------------------------------------------------------------------------------
 
-# We define the minimum Terraform version and the required providers here.
+# Define the minimum Terraform version and the required providers here.
 # For more information, see: https://www.terraform.io/language/settings
-# We'll use the latest Terraform version and a specific AWS provider version to ensure
+# Use the latest Terraform version and a specific AWS provider version to ensure
 # compatibility and stability.
 terraform {
   required_version = ">= 1.5"
@@ -27,8 +27,6 @@ terraform {
 # PROVIDER CONFIGURATION
 # ---------------------------------------------------------------------------------------------------------------------
 
-# The AWS provider is configured here. We use a variable for the region, which we defined below,
-# so that the code can be easily reused in different regions without modification.
 # For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs
 provider "aws" {
   region = var.aws_region
@@ -38,9 +36,7 @@ provider "aws" {
 # DATA SOURCES
 # ---------------------------------------------------------------------------------------------------------------------
 
-# A data source is a resource that "fetches" data rather than creating it.
-# This data source finds the most recent Ubuntu 20.04 LTS AMI, which is much better than
-# hard-coding an AMI ID that might become outdated or not work in all regions.
+# This data source finds the most recent Ubuntu 20.04 LTS AMI
 # For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami
 data "aws_ami" "ubuntu" {
   owners      = ["099720109477"] # Canonical's AWS account ID for Ubuntu images
@@ -61,7 +57,7 @@ data "aws_ami" "ubuntu" {
 # RESOURCES
 # ---------------------------------------------------------------------------------------------------------------------
 
-# This resource generates a private key that we can use for SSH access.
+# This resource generates a private key that to use for SSH access.
 # For more information, see: https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key
 resource "tls_private_key" "dev-key" {
   algorithm = "RSA"
@@ -80,38 +76,23 @@ resource "aws_key_pair" "dev-key-pair" {
   }
 }
 
-# This resource creates the EC2 instance itself. We're now using a data source for the AMI
-# and a variable for the instance type, making the resource block much more dynamic.
+# This resource creates the EC2 instance
 # For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance
 resource "aws_instance" "example" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
-  key_name                    = "dev-key-pair"
-  vpc_security_group_ids      = [aws_security_group.instance.id]
-  user_data                   = <<-EOF
-              #!/bin/bash
-              echo "Hola, Mundo! <br> Welcome to your workstation!" > index.html
-              nohup busybox httpd -f -p 8080 &
-              EOF
-  user_data_replace_on_change = true
-
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = "dev-key-pair"
+  vpc_security_group_ids = [aws_security_group.instance.id]
   tags = {
     Name = "terraform-dev"
   }
 }
 
 # This resource creates a security group to act as a firewall for the EC2 instance.
-# We're using a variable for the name, as you already had.
+# The only inbound traffic we're allowing is for SSH (port 22).
 # For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
 resource "aws_security_group" "instance" {
   name = var.security_group_name
-
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   ingress {
     from_port   = 22
@@ -132,8 +113,6 @@ resource "aws_security_group" "instance" {
 # VARIABLES
 # ---------------------------------------------------------------------------------------------------------------------
 
-# A variable is a named value that can be passed into a Terraform module.
-# We've added a few here to make the code more configurable and reusable.
 # For more information, see: https://www.terraform.io/language/values/variables
 variable "aws_region" {
   description = "AWS cloud region to deploy resources to."

@@ -8,6 +8,14 @@ terraform destroy
 
 Connect to the EC2 Instance using SSH
 
+```shell
+chmod 400 dev-key-pair.pem
+```
+
+```shell
+ssh -i dev-key-pair.pem ubuntu@<public-dns>
+```
+
 Update Ubuntu Repositories
 
 ```shell
