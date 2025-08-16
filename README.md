@@ -3,16 +3,30 @@
 > **Note**: </br>
 > The following assumes [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [Terraform](https://developer.hashicorp.com/terraform/install) are installed and configured.
 
+## **Provision a Private Key
+```shell
+cd key-management
+terraform init
+terraform apply
+```
+
 ## **Provision the Ubuntu EC2 Instance using Terraform**
 
-Apply the `main.tf` Terraform script
+Apply the Infrastructure Deployment Terraform script
 ```shell
+cd infra-deployment
 terraform init
 terraform apply
 ```
 
 Destroy
 ```shell
+cd infra-deployment
+terraform destroy
+```
+
+```shell
+cd key-management
 terraform destroy
 ```
 
@@ -20,12 +34,12 @@ terraform destroy
 
 Change permissions for the `.pem` file
 ```shell
-chmod 400 dev-key-pair.pem
+chmod 400 ./key-management/dev-key-pair.pem
 ```
 
 Connect using `ssh`
 ```shell
-ssh -i dev-key-pair.pem <user>@<public-dns>
+ssh -i key-management/dev-key-pair.pem <user>@<public-dns or public-ip>
 ```
 
 Update Ubuntu Repositories

@@ -16,10 +16,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
   }
 }
 
@@ -54,35 +50,23 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# This data source looks up the existing key pair by its name.
+# This allows the aws_instance resource to reference the key without having to create it.
+# For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/key_pair
+data "aws_key_pair" "dev-key-pair" {
+  key_name = "dev-key-pair"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # RESOURCES
 # ---------------------------------------------------------------------------------------------------------------------
-
-# This resource generates a private key that to use for SSH access.
-# For more information, see: https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key
-resource "tls_private_key" "dev-key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-# This resource uploads the public key from the tls_private_key resource to AWS.
-# The `provisioner` block creates a local file with the private key for us to use.
-# For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair
-resource "aws_key_pair" "dev-key-pair" {
-  key_name   = "dev-key-pair"
-  public_key = tls_private_key.dev-key.public_key_openssh
-
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.dev-key.private_key_pem}' > ./dev-key-pair.pem"
-  }
-}
 
 # This resource creates the EC2 instance
 # For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance
 resource "aws_instance" "example" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  key_name               = "dev-key-pair"
+  key_name               = data.aws_key_pair.dev-key-pair.key_name
   vpc_security_group_ids = [aws_security_group.instance.id]
   tags = {
     Name = "terraform-dev"
@@ -143,16 +127,4 @@ variable "instance_type" {
 output "public_ip" {
   value       = aws_instance.example.public_ip
   description = "The public IP of the Instance"
-}
-
-output "instance_public_key" {
-  description = "Public key of dev-key-pair"
-  value       = tls_private_key.dev-key.public_key_openssh
-  sensitive   = true
-}
-
-output "instance_private_key" {
-  description = "Private key of dev-key-pair"
-  value       = tls_private_key.dev-key.public_key_pem
-  sensitive   = true
 }
