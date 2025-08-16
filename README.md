@@ -12,6 +12,11 @@ terraform apply
 
 ## **Provision the Ubuntu EC2 Instance using Terraform**
 
+Obtain Credentials for the AWS CLI Configured with SSO
+```shell
+aws sso login --profile "AdminJorge"
+```
+
 Apply the Infrastructure Deployment Terraform script
 ```shell
 cd infra-deployment
