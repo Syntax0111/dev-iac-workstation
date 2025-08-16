@@ -3,7 +3,7 @@
 > **Note**: </br>
 > The following assumes [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [Terraform](https://developer.hashicorp.com/terraform/install) are installed and configured.
 
-## **Provision a Private Key
+## **Provision a Private Key**
 ```shell
 cd key-management
 terraform init
